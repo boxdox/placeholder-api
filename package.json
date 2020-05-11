@@ -8,11 +8,12 @@
   "private": true,
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "nodemon src/app.ts",
+    "dev": "nodemon src/text.ts",
     "build": "tsc -p ."
   },
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "jimp": "^0.10.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.6",
