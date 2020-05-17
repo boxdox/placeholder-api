@@ -8,16 +8,17 @@
   "private": true,
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "nodemon src/text.ts",
+    "dev": "nodemon src/image/image.ts",
     "build": "tsc -p ."
   },
   "dependencies": {
     "express": "^4.17.1",
-    "jimp": "^0.10.3"
+    "sharp": "^0.25.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.6",
     "@types/node": "^13.13.4",
+    "@types/sharp": "^0.25.0",
     "nodemon": "^2.0.3",
     "ts-node": "^8.10.1",
     "typescript": "^3.8.3"
