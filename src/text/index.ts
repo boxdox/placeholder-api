@@ -91,4 +91,65 @@ const generateParagraph = (amount: number = 3): string[] => {
   return paragraphs;
 };
 
-const generateText = () => {};
+type TextType = "word" | "sentence" | "paragraph";
+type TextFormat = "html" | "json" | "raw";
+interface generateTextProps {
+  amount?: number;
+  type: TextType;
+  format: TextFormat;
+}
+
+const generateText = ({ amount = 3, type, format }: generateTextProps): any => {
+  let result;
+  switch (type) {
+    case "word":
+      result = generateWords({ amount });
+      break;
+    case "sentence":
+      result = generateSentences({ amount });
+      break;
+    case "paragraph":
+      result = generateParagraph(amount);
+      break;
+    default:
+      return;
+  }
+
+  switch (format) {
+    case "raw":
+      return result;
+    case "html":
+      switch (type) {
+        case "word":
+          return `<p>${result.join(" ")}</p>`;
+        case "sentence":
+          return `<p>${result.join(" ")}</p>`;
+        case "paragraph":
+          return result
+            .map((item) => {
+              return `<p>${item}</p>\n`;
+            })
+            .join("")
+            .trim();
+      }
+    case "json":
+      const text: string =
+        type === "paragraph" ? result.join("\n") : result.join(" ");
+      const wordCount: number =
+        type === "word"
+          ? amount
+          : text.replace(/[.,\\n]/, "").split(" ").length;
+      const paraCount: number = result.length;
+      return {
+        text,
+        count:
+          type === "paragraph"
+            ? `${paraCount} paragraphs, ${wordCount} words generated`
+            : `${wordCount} words generated`,
+        credits: "https://github.com/boxdox/placeholder-api",
+        support: "https://www.buymeacoffee.com/blamemycode",
+      };
+  }
+};
+
+export default generateText;

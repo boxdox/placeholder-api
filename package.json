@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "nodemon src/image/image.ts",
+    "dev": "nodemon src/app.ts",
     "build": "tsc -p ."
   },
   "dependencies": {

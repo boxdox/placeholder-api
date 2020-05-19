@@ -7,19 +7,16 @@
 import sharp from "sharp";
 import colorList, { Color } from "./colors";
 
-enum Format {
-  "jpeg",
-  "png",
-  "bmp",
-}
-interface imageArgs {
+type Format = "jpeg" | "png" | "bmp";
+
+interface generateImageProps {
   width: number;
   height?: number;
   format?: Format;
   text?: string;
 }
 
-const generateImage = (args: imageArgs) => {
+const generateImage = (args: generateImageProps) => {
   const {
     width,
     height = width,
@@ -54,7 +51,7 @@ const generateImage = (args: imageArgs) => {
   </svg>
 `);
 
-  sharp({
+  return sharp({
     create: {
       width,
       height,
@@ -63,8 +60,8 @@ const generateImage = (args: imageArgs) => {
     },
   })
     .composite([{ input: Text, gravity: "center" }])
-    .toFormat("jpeg")
-    .toFile("test.jpg");
+    .toFormat(format)
+    .toBuffer();
 };
 
-generateImage({ width: 1000, height: 400 });
+export default generateImage;

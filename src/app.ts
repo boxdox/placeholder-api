@@ -6,6 +6,8 @@
 
 import express, { Application, Request, Response } from "express";
 import path from "path";
+import generateText from "./text";
+import generateImage from "./image";
 
 const PORT = process.env.PORT || 3000;
 
@@ -21,14 +23,30 @@ app.get("/", (req: Request, res: Response) => {
 // ---------------------
 // Text API
 // ---------------------
-app.get("/text", (req: Request, res: Response) => {
-  const { type = "paragraph", amount = 3, format = "html" } = req.query;
-  res.status(200).json({ type, amount, format });
+app.get("/text", async (req: Request, res: Response) => {
+  // const { type = "paragraph", amount = 3, format = "html" }:generateTextProps = req.query;
+  const type: any = req.query.type || "paragraph";
+  const amount: any = req.query.amount || 3;
+  const format: any = req.query.format || "html";
+  const result = await generateText({ amount, type, format });
+  if (result) {
+    res.status(200).send(result);
+  } else {
+    res.status(400).send(
+      `Wrong type specified.
+         Check if:
+         'type' is one of 'word', 'sentence' or 'paragraph'
+         or 
+         'format' is one of 'raw', 'html' or 'json'`
+    );
+  }
 });
 
 // ---------------------
 // Image API
 // ---------------------
+
+// This route matches if there is no width specified
 app.get("/image", (req: Request, res: Response) => {
   res
     .status(400)
@@ -37,14 +55,31 @@ app.get("/image", (req: Request, res: Response) => {
 
 app.get(
   "/image/:width(\\d+)/:height(\\d+)?/:format?",
-  (req: Request, res: Response) => {
-    const { width, height = width, format = "jpeg" } = req.params;
-    res.status(200).json({ width, height, format });
+  async (req: Request, res: Response) => {
+    // const { width, height = width, format = "jpeg" } = req.params;
+    const width = parseInt(req.params.width);
+    const height = parseInt(req.params.height) || width;
+    const format: any = req.params.format || "jpeg";
+    const text: any = req.query.text;
+    if (!["jpeg", "png", "bmp"].includes(format)) {
+      return res
+        .status(400)
+        .send(
+          "Wrong format specified. 'format' should be one of 'jpeg', 'png' or 'bmp'"
+        );
+    }
+    if (width > 4000) {
+      return res.status(400).send("Sorry, that's way too large to process :)");
+    }
+    const image = await generateImage({ width, height, format, text })
+      .then((data) => data)
+      .catch((err) => console.log(err));
+    res.status(200).contentType(`image/${format}`).send(image);
   }
 );
 
 // Handle 404
-app.use((req, res, next) => {
+app.use((req: Request, res: Response) => {
   res.status(404).send({ error: "Wrong URL" });
 });
 
