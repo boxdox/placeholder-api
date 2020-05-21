@@ -1,6 +1,6 @@
 {
   "name": "placeholder-api",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "A simple API for text and image placeholders!",
   "main": "index.js",
   "author": "boxdox",
@@ -19,6 +19,7 @@
     "@types/express": "^4.17.6",
     "@types/node": "^13.13.4",
     "@types/sharp": "^0.25.0",
+    "dotenv": "^8.2.0",
     "nodemon": "^2.0.3",
     "ts-node": "^8.10.1",
     "typescript": "^3.8.3"

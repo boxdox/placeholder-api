@@ -8,7 +8,12 @@ import express, { Application, Request, Response } from "express";
 import path from "path";
 import generateText from "./text";
 import generateImage from "./image";
+import { config } from "dotenv";
 
+// Init dot env file
+config();
+
+// Get port from file
 const PORT = process.env.PORT || 3000;
 
 const app: Application = express();
@@ -61,6 +66,7 @@ app.get(
     const height = parseInt(req.params.height) || width;
     const format: any = req.params.format || "jpeg";
     const text: any = req.query.text;
+    console.log(width, height, format);
     if (!["jpeg", "png", "bmp"].includes(format)) {
       return res
         .status(400)
@@ -68,7 +74,10 @@ app.get(
           "Wrong format specified. 'format' should be one of 'jpeg', 'png' or 'bmp'"
         );
     }
-    if (width > 4000) {
+    if (width <= 0 || height <= 0) {
+      return res.status(400).send("What do you mean by < 0 width or height?");
+    }
+    if (width > 4000 || height > 4000) {
       return res.status(400).send("Sorry, that's way too large to process :)");
     }
     const image = await generateImage({ width, height, format, text })
