@@ -1,98 +1,126 @@
 /*
- * Copyright (c) 2020 MIT
+ * Copyright (c) 2021 MIT
  * @File: app.ts
  * @Author: boxdox
  */
 
-import express, { Application, Request, Response } from "express";
-import path from "path";
-import generateText from "./text";
-import generateImage from "./image";
-import { config } from "dotenv";
+import express, { Express, Request, Response } from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import compression from 'compression'
+import path from 'path'
 
-// Init dot env file
-config();
+import generateText from './text'
+import generateImage from './image'
+import { TextType, TextFormat, ImageFormat } from './utils/types'
+import { imageFormats } from './utils/constants'
+import { joinArrayWith } from './utils/utils'
 
-// Get port from file
-const PORT = process.env.PORT || 3000;
+export const app: Express = express()
 
-const app: Application = express();
+// setup middleware
+app.use(cors())
+app.use(helmet())
+app.use(compression())
 
-// ---------------------
-// HomePage
-// ---------------------
-app.get("/", (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+// root route
+app.get('/', (_, res: Response) => {
+  res.sendFile(path.join(__dirname, 'index.html'))
+})
 
-// ---------------------
-// Text API
-// ---------------------
-app.get("/text", async (req: Request, res: Response) => {
-  // const { type = "paragraph", amount = 3, format = "html" }:generateTextProps = req.query;
-  const type: any = req.query.type || "paragraph";
-  const amount: any = req.query.amount || 3;
-  const format: any = req.query.format || "html";
-  const result = await generateText({ amount, type, format });
-  if (result) {
-    res.status(200).send(result);
-  } else {
-    res.status(400).send(
-      `Wrong type specified.
-         Check if:
-         'type' is one of 'word', 'sentence' or 'paragraph'
-         or 
-         'format' is one of 'raw', 'html' or 'json'`
-    );
+// text api route
+interface ITextAPIQuery {
+  type: TextType
+  format: TextFormat
+  amount: number
+}
+app.get('/text', (req: Request<{}, {}, {}, ITextAPIQuery>, res: Response) => {
+  let { amount = 3, type = 'paragraph', format = 'html' } = req.query
+
+  amount = +amount
+  if (amount <= 0) amount = 3
+
+  if (amount > 1000) {
+    res.status(400).json({
+      error:
+        "That's way too large to process for a free service like me. If you need to fulfill these kinds of requests, consider self hosting this API",
+    })
   }
-});
 
-// ---------------------
-// Image API
-// ---------------------
+  try {
+    const result = generateText({ amount, type, format })
+    res.status(200).send(result)
+  } catch {
+    res.status(400).json(
+      `Wrong type specified.
+      Check if:
+      'type' is one of 'word', 'sentence' or 'paragraph'
+      or 
+      'format' is one of 'raw', 'html' or 'json'`
+    )
+  }
+})
 
+// image api route
 // This route matches if there is no width specified
-app.get("/image", (req: Request, res: Response) => {
+app.get('/image', (_, res: Response) => {
   res
     .status(400)
-    .json({ error: "No width specified. Use something like /image/300" });
-});
+    .json({ error: 'No width specified. Use something like /image/300' })
+})
+
+interface IImageParams {
+  width: number
+  height: number
+  format: ImageFormat
+}
+
+interface IImageQuery {
+  text: string
+}
 
 app.get(
-  "/image/:width(\\d+)/:height(\\d+)?/:format?",
-  async (req: Request, res: Response) => {
-    // const { width, height = width, format = "jpeg" } = req.params;
-    const width = parseInt(req.params.width);
-    const height = parseInt(req.params.height) || width;
-    const format: any = req.params.format || "jpeg";
-    const text: any = req.query.text;
-    console.log(width, height, format);
-    if (!["jpeg", "png", "bmp"].includes(format)) {
-      return res
-        .status(400)
-        .send(
-          "Wrong format specified. 'format' should be one of 'jpeg', 'png' or 'bmp'"
-        );
+  '/image/:width(\\d+)/:height(\\d+)?/:format?',
+  async (req: Request<IImageParams, {}, {}, IImageQuery>, res: Response) => {
+    let { width, height = width, format = 'jpeg' } = req.params
+    width = +width
+    height = +height
+    const { text } = req.query
+
+    if (!imageFormats.includes(format)) {
+      return res.status(400).json({
+        error: `Wrong format specified. 'format' should be one of ${joinArrayWith(
+          imageFormats.slice(),
+          'or'
+        )}`,
+      })
     }
     if (width <= 0 || height <= 0) {
-      return res.status(400).send("What do you mean by < 0 width or height?");
+      return res.status(400).json({
+        error: 'What do you mean by zero or negative width or height?',
+      })
     }
     if (width > 4000 || height > 4000) {
-      return res.status(400).send("Sorry, that's way too large to process :)");
+      return res.status(400).json({
+        error:
+          "Sorry, that's way too large to process. Reduce the offending value to < 4000",
+      })
     }
-    const image = await generateImage({ width, height, format, text })
-      .then((data) => data)
-      .catch((err) => console.log(err));
-    res.status(200).contentType(`image/${format}`).send(image);
+
+    try {
+      const image = await generateImage({ width, height, format, text })
+      res.status(200).contentType(`image/${format}`).send(image)
+    } catch (e) {
+      console.error(e)
+      res.status(500).json({
+        error:
+          "An error has ocurred while processing your request. We're sorry.",
+      })
+    }
   }
-);
+)
 
 // Handle 404
-app.use((req: Request, res: Response) => {
-  res.status(404).send({ error: "Wrong URL" });
-});
-
-// Initiate the server
-app.listen(PORT, () => {
-  console.log(`Listening on ${PORT} ⚡`);
-});
+app.use((_, res: Response) => {
+  res.status(404).json({ error: 'Wrong URL' })
+})

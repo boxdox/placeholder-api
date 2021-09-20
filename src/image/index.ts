@@ -1,36 +1,35 @@
 /*
- * Copyright (c) 2020 MIT
+ * Copyright (c) 2021 MIT
  * @File: image.ts
  * @Author: boxdox
  */
 
-import sharp from "sharp";
-import colorList, { Color } from "./colors";
-
-type Format = "jpeg" | "png" | "bmp";
+import sharp from 'sharp'
+import colorList, { Color } from './colors'
+import { ImageFormat } from '../utils/types'
 
 interface generateImageProps {
-  width: number;
-  height?: number;
-  format?: Format;
-  text?: string;
+  width: number
+  height?: number
+  format?: ImageFormat
+  text?: string
 }
 
 const generateImage = (args: generateImageProps) => {
   const {
     width,
     height = width,
-    format = "jpeg",
+    format = 'jpeg',
     text = `${width} x ${height}`,
-  } = args;
+  } = args
 
   //
   // Generate Image
   //
 
   // Select color from random
-  const index: number = Math.trunc(Math.random() * colorList.length);
-  const { color, backgroundColor }: Color = colorList[index];
+  const index: number = Math.trunc(Math.random() * colorList.length)
+  const { color, backgroundColor }: Color = colorList[index]
 
   // Calculate font size using width of text
   const fontSize: number =
@@ -38,7 +37,7 @@ const generateImage = (args: generateImageProps) => {
       ? width / height >= 10
         ? width * 0.06
         : width * 0.075
-      : width * 0.15;
+      : width * 0.15
 
   // Create a svg buffer to composite on the image
   const Text: Buffer = Buffer.from(`
@@ -49,7 +48,7 @@ const generateImage = (args: generateImageProps) => {
       ${text.trim()}
     </text>
   </svg>
-`);
+`)
 
   return sharp({
     create: {
@@ -59,9 +58,9 @@ const generateImage = (args: generateImageProps) => {
       background: backgroundColor,
     },
   })
-    .composite([{ input: Text, gravity: "center" }])
+    .composite([{ input: Text, gravity: 'center' }])
     .toFormat(format)
-    .toBuffer();
-};
+    .toBuffer()
+}
 
-export default generateImage;
+export default generateImage
