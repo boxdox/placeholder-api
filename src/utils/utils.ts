@@ -3,6 +3,7 @@
  * @File: utils.ts
  * @Author: boxdox
  */
+import { imageSize } from 'image-size'
 
 export const randomNumber = (min: number, max: number): number => {
   return Math.trunc(Math.random() * (max - min) + min)
@@ -23,4 +24,11 @@ export const joinArrayWith: JoinArrayWithType = (
     else acc += val + ', '
     return acc
   }, '')
+}
+
+export const getImageSizeFromBuffer = (
+  imageBuffer: Buffer
+): { width: number; height: number } => {
+  const dimensions = imageSize(imageBuffer)
+  return { width: dimensions.width || 0, height: dimensions.height || 0 }
 }
