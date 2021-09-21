@@ -1,6 +1,13 @@
 import request from 'supertest'
 import { app } from '../app'
-import { getImageSizeFromBuffer } from '../utils/utils'
+import { imageSize } from 'image-size'
+
+export const getImageSizeFromBuffer = (
+  imageBuffer: Buffer
+): { width: number; height: number } => {
+  const dimensions = imageSize(imageBuffer)
+  return { width: dimensions.width || 0, height: dimensions.height || 0 }
+}
 
 jest.setTimeout(10000)
 

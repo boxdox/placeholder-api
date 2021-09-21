@@ -20,7 +20,16 @@ export const app: Express = express()
 
 // setup middleware
 app.use(cors())
-app.use(helmet())
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        imgSrc: "'self' data: https:",
+      },
+    },
+  })
+)
 app.use(compression())
 
 // root route
@@ -51,13 +60,9 @@ app.get('/text', (req: Request<{}, {}, {}, ITextAPIQuery>, res: Response) => {
     const result = generateText({ amount, type, format })
     res.status(200).send(result)
   } catch {
-    res.status(400).json(
-      `Wrong type specified.
-      Check if:
-      'type' is one of 'word', 'sentence' or 'paragraph'
-      or 
-      'format' is one of 'raw', 'html' or 'json'`
-    )
+    res.status(400).json({
+      error: `Wrong type specified. Check if: 'type' is one of 'word', 'sentence' or 'paragraph' or 'format' is one of 'raw', 'html' or 'json'`,
+    })
   }
 })
 
